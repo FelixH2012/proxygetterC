@@ -4,22 +4,17 @@ import me.felix.proxygetter.Project;
 import me.felix.proxygetter.TextUtil;
 
 import javax.swing.*;
-import javax.swing.border.EtchedBorder;
-import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.net.URL;
-import java.util.Objects;
 
 public class UIRenderer extends JFrame {
 
     JButton button = new JButton();
-
+    JButton infoButton = new JButton();
     public int width, height;
+
+    public static boolean oldNotVisble;
 
     public String proxyScrape;
 
@@ -27,7 +22,11 @@ public class UIRenderer extends JFrame {
     public static int listenTicks = 0;
 
     public static boolean gotOutput = false;
-    static JComboBox c1;
+    static JComboBox<String> c1;
+
+    public JTextArea textField = new JTextArea();
+    public JLabel output = new JLabel();
+    public JScrollPane scroll = new JScrollPane(textField);
 
     public enum SELECTED_TYPE {
         SOCKS4,
@@ -66,29 +65,47 @@ public class UIRenderer extends JFrame {
     }
 
     public void render() {
-        Dimension size = button.getPreferredSize();
-
         button.setFont(new Font("arial", Font.PLAIN, 12));
         button.setBounds(122, 22, 220, 30);
         button.setText("Get proxys from proxyscrape");
         add(button);
         getContentPane().add(button);
-        JLabel output = new JLabel();
+
+        infoButton.setFont(new Font("arial", Font.BOLD, 12));
+        infoButton.setBounds(22, 22, 90, 30);
+        infoButton.setText("about");
+        add(infoButton);
+        getContentPane().add(infoButton);
+
+
+
+
         add(output);
-        JTextArea textField = new JTextArea();
         textField.setEditable(false);
 
+        String[] s1 = {"Socks4", "Socks5", "Http"};
 
-        String s1[] = {"Socks4", "Socks5", "Http"};
-
-        c1 = new JComboBox(s1);
-
+        c1 = new JComboBox<>(s1);
         c1.setBounds(347, 22, 120, 30);
+        assert outputString != null;
+        if (!outputString.isEmpty()) {
+            StringBuilder str = new StringBuilder();
+            for (int i = 0; i < 50; ++i)
+                str.append(outputString).append("\n");
+            textField.setText(str.toString());
 
+            scroll.setBounds(10, 81, 455, 249);                     // <-- THIS
 
+            getContentPane().add(scroll);
+            setLocationRelativeTo(null);
+
+            scroll.setVisible(true);
+        }
+        JLabel follow = new JLabel();
         c1.addActionListener(e -> {
+            scroll.repaint();
             proxyScrape = "";
-            String data = (String) c1.getItemAt(c1.getSelectedIndex());
+            String data = c1.getItemAt(c1.getSelectedIndex());
             switch (data) {
                 case "Socks3" -> type = SELECTED_TYPE.SOCK5;
                 case "Socks4" -> type = SELECTED_TYPE.SOCKS4;
@@ -105,62 +122,13 @@ public class UIRenderer extends JFrame {
         } else {
             proxyScrape = "https://api.proxyscrape.com/v2/?request=displayproxies&protocol=http&timeout=10000&country=all&ssl=all&anonymity=all";
         }
-
-        assert outputString != null;
-        if (!outputString.isEmpty()) {
-            String str = "";
-            for (int i = 0; i < 50; ++i)
-                str += outputString + "\n";
-            textField.setText(str);
-
-            JScrollPane scroll = new JScrollPane(textField);
-            scroll.setBounds(10, 81, 455, 249);                     // <-- THIS
-
-            getContentPane().add(scroll);
-            setLocationRelativeTo(null);
-
-            scroll.setVisible(true);
-        }
-        JLabel follow = new JLabel();
         add(follow);
-        if (gotOutput) {
-            output.setText("Proxys copied to clipboard!");
-            output.setBounds(4, -10, 422, 40);
-            output.setFont(new Font("arial", Font.PLAIN, 10));
-            getContentPane().add(output);
-            output.setVisible(true);
 
-            follow.setText("Coded by felix1337");
-            follow.setBounds(9, 16, 422, 40);
-            follow.setFont(new Font("arial", Font.PLAIN, 10));
-            getContentPane().add(follow);
-            follow.setVisible(true);
-
-        }
-
-
-            add(c1);
-            getContentPane().add(c1);
-
+        add(c1);
+        getContentPane().add(c1);
 
     }
 
-
-    public void itemStateChanged(ItemEvent e) {
-        // if the state combobox is changed
-        if (e.getSource() == c1) {
-
-            if ("Socks4".equals(Objects.requireNonNull(c1.getSelectedItem()))) {
-                type = SELECTED_TYPE.SOCKS4;
-            }
-            if ("Socks3".equals(Objects.requireNonNull(c1.getSelectedItem()))) {
-                type = SELECTED_TYPE.SOCK5;
-            }
-            if ("http".equals(Objects.requireNonNull(c1.getSelectedItem()))) {
-                type = SELECTED_TYPE.HTTPS;
-            }
-        }
-    }
 
     public void listenButtons() {
 
@@ -171,14 +139,18 @@ public class UIRenderer extends JFrame {
                     gotOutput = true;
                 }
                 listenTicks = 1;
-                StringSelection selection = new StringSelection(TextUtil.getText(proxyScrape));
-                Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-                clipboard.setContents(selection, selection);
                 outputString = TextUtil.getText(proxyScrape);
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
+
+            infoButton.addActionListener(infoButton -> {
+                JFrame InfoRenderer = new InformationRenderer();
+                InfoRenderer.setVisible(true);
+            });
+
         });
     }
+
 
 }

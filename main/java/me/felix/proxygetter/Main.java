@@ -13,7 +13,7 @@ public class Main {
         project.initProject();
         FlatLightLaf.setup();
         try {
-            UIManager.setLookAndFeel("com.formdev.flatlaf.FlatDarkLaf");
+            UIManager.setLookAndFeel("com.formdev.flatlaf.intellijthemes.FlatDarkFlatIJTheme");
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
             e.printStackTrace();
         }
