@@ -9,7 +9,11 @@ import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
 import java.net.URL;
+import java.util.Objects;
 
 public class UIRenderer extends JFrame {
 
@@ -17,11 +21,21 @@ public class UIRenderer extends JFrame {
 
     public int width, height;
 
-    public String proxyScrape = "https://api.proxyscrape.com/v2/?request=displayproxies&protocol=http&timeout=10000&country=all&ssl=all&anonymity=all";
+    public String proxyScrape;
 
     public static String outputString = "";
+    public static int listenTicks = 0;
 
     public static boolean gotOutput = false;
+    static JComboBox c1;
+
+    public enum SELECTED_TYPE {
+        SOCKS4,
+        SOCK5,
+        HTTPS
+    }
+
+    public SELECTED_TYPE type;
 
     public UIRenderer() {
         final Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
@@ -37,7 +51,6 @@ public class UIRenderer extends JFrame {
         setSize(width, height);
         setVisible(true);
         setResizable(false);
-        listenButtons();
     }
 
     @Override
@@ -47,32 +60,51 @@ public class UIRenderer extends JFrame {
 
     @Override
     public void revalidate() {
+        listenButtons();
         render();
         super.revalidate();
     }
 
     public void render() {
         Dimension size = button.getPreferredSize();
-        final JLabel jLabel = new JLabel("Proxygetter coded by Felix1337.");
-        jLabel.setFont(new Font("arial", Font.BOLD, 22));
-
-        jLabel.setBounds(250 / 2 - size.width / 2, 20 / 2 - size.height, 422, 40);
-
-        add(jLabel);
-        getContentPane().add(jLabel);
 
         button.setFont(new Font("arial", Font.PLAIN, 12));
-        button.setBounds(350 / 2 - size.width / 2, 100 / 2 - size.height / 2, 220, 30);
+        button.setBounds(122, 22, 220, 30);
         button.setText("Get proxys from proxyscrape");
         add(button);
-        System.out.println(gotOutput);
         getContentPane().add(button);
         JLabel output = new JLabel();
         add(output);
-        System.out.println(outputString);
-
         JTextArea textField = new JTextArea();
         textField.setEditable(false);
+
+
+        String s1[] = {"Socks4", "Socks5", "Http"};
+
+        c1 = new JComboBox(s1);
+
+        c1.setBounds(347, 22, 120, 30);
+
+
+        c1.addActionListener(e -> {
+            proxyScrape = "";
+            String data = (String) c1.getItemAt(c1.getSelectedIndex());
+            switch (data) {
+                case "Socks3" -> type = SELECTED_TYPE.SOCK5;
+                case "Socks4" -> type = SELECTED_TYPE.SOCKS4;
+                case "Http" -> type = SELECTED_TYPE.HTTPS;
+            }
+        });
+
+        if (type != null) {
+            switch (type) {
+                case HTTPS -> proxyScrape = "https://api.proxyscrape.com/v2/?request=displayproxies&protocol=http&timeout=10000&country=all&ssl=all&anonymity=all";
+                case SOCK5 -> proxyScrape = "https://api.proxyscrape.com/v2/?request=displayproxies&protocol=socks5&timeout=10000&country=all&ssl=all&anonymity=all";
+                case SOCKS4 -> proxyScrape = "https://api.proxyscrape.com/v2/?request=displayproxies&protocol=socks4&timeout=10000&country=all&ssl=all&anonymity=all";
+            }
+        } else {
+            proxyScrape = "https://api.proxyscrape.com/v2/?request=displayproxies&protocol=http&timeout=10000&country=all&ssl=all&anonymity=all";
+        }
 
         assert outputString != null;
         if (!outputString.isEmpty()) {
@@ -89,22 +121,56 @@ public class UIRenderer extends JFrame {
 
             scroll.setVisible(true);
         }
+        JLabel follow = new JLabel();
+        add(follow);
         if (gotOutput) {
             output.setText("Proxys copied to clipboard!");
-            output.setBounds(817 / 2 - size.width / 2, 35, 422, 40);
-            output.setFont(new Font("arial", Font.BOLD, 12));
+            output.setBounds(4, -10, 422, 40);
+            output.setFont(new Font("arial", Font.PLAIN, 10));
             getContentPane().add(output);
             output.setVisible(true);
+
+            follow.setText("Coded by felix1337");
+            follow.setBounds(9, 16, 422, 40);
+            follow.setFont(new Font("arial", Font.PLAIN, 10));
+            getContentPane().add(follow);
+            follow.setVisible(true);
+
+        }
+
+
+            add(c1);
+            getContentPane().add(c1);
+
+
+    }
+
+
+    public void itemStateChanged(ItemEvent e) {
+        // if the state combobox is changed
+        if (e.getSource() == c1) {
+
+            if ("Socks4".equals(Objects.requireNonNull(c1.getSelectedItem()))) {
+                type = SELECTED_TYPE.SOCKS4;
+            }
+            if ("Socks3".equals(Objects.requireNonNull(c1.getSelectedItem()))) {
+                type = SELECTED_TYPE.SOCK5;
+            }
+            if ("http".equals(Objects.requireNonNull(c1.getSelectedItem()))) {
+                type = SELECTED_TYPE.HTTPS;
+            }
         }
     }
 
     public void listenButtons() {
+
         button.addActionListener(e -> {
             try {
                 revalidate();
                 if (!TextUtil.getText(proxyScrape).isEmpty()) {
                     gotOutput = true;
                 }
+                listenTicks = 1;
                 StringSelection selection = new StringSelection(TextUtil.getText(proxyScrape));
                 Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                 clipboard.setContents(selection, selection);
