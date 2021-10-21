@@ -4,9 +4,12 @@ import me.felix.proxygetter.Project;
 import me.felix.proxygetter.TextUtil;
 
 import javax.swing.*;
+import javax.swing.border.EtchedBorder;
+import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
+import java.net.URL;
 
 public class UIRenderer extends JFrame {
 
@@ -15,6 +18,8 @@ public class UIRenderer extends JFrame {
     public int width, height;
 
     public String proxyScrape = "https://api.proxyscrape.com/v2/?request=displayproxies&protocol=http&timeout=10000&country=all&ssl=all&anonymity=all";
+
+    public static String outputString = "";
 
     public static boolean gotOutput = false;
 
@@ -33,7 +38,6 @@ public class UIRenderer extends JFrame {
         setVisible(true);
         setResizable(false);
         listenButtons();
-
     }
 
     @Override
@@ -65,6 +69,26 @@ public class UIRenderer extends JFrame {
         getContentPane().add(button);
         JLabel output = new JLabel();
         add(output);
+        System.out.println(outputString);
+
+        JTextArea textField = new JTextArea();
+        textField.setEditable(false);
+
+        assert outputString != null;
+        if (!outputString.isEmpty()) {
+            String str = "";
+            for (int i = 0; i < 50; ++i)
+                str += outputString + "\n";
+            textField.setText(str);
+
+            JScrollPane scroll = new JScrollPane(textField);
+            scroll.setBounds(10, 81, 455, 249);                     // <-- THIS
+
+            getContentPane().add(scroll);
+            setLocationRelativeTo(null);
+
+            scroll.setVisible(true);
+        }
         if (gotOutput) {
             output.setText("Proxys copied to clipboard!");
             output.setBounds(817 / 2 - size.width / 2, 35, 422, 40);
@@ -84,6 +108,7 @@ public class UIRenderer extends JFrame {
                 StringSelection selection = new StringSelection(TextUtil.getText(proxyScrape));
                 Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                 clipboard.setContents(selection, selection);
+                outputString = TextUtil.getText(proxyScrape);
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
